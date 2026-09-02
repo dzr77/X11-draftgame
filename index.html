@@ -3,14 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Draft X11 WebView</title>
+  <title>Draft X11 - Campo Interativo</title>
   <style>
-    /* ESTILOS VISUAIS (MOBILE-FIRST) */
     :root {
       --bg: #F4F1EA;
       --dark: #1A1A1A;
       --red: #E03C31;
       --gray: #666;
+      --pitch-green: #2e7d32;
+      --pitch-line: rgba(255, 255, 255, 0.7);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Arial', sans-serif; user-select: none; }
     body { background-color: var(--bg); color: var(--dark); padding: 15px; padding-bottom: 40px; }
@@ -18,44 +19,115 @@
     .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--dark); padding-bottom: 10px; margin-top: 10px; margin-bottom: 15px; }
     .logo { font-size: 32px; font-weight: 900; letter-spacing: -1px; }
     .tactic-text { font-size: 11px; font-weight: 800; color: var(--gray); margin-right: 15px; }
-    
     .info-btn { background: #EAE6DA; width: 34px; height: 34px; border-radius: 17px; border: 1.5px solid var(--dark); display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; }
     
-    .formations { display: flex; overflow-x: auto; margin-bottom: 20px; padding-bottom: 5px; }
+    .formations { display: flex; overflow-x: auto; margin-bottom: 15px; padding-bottom: 5px; }
     .form-btn { border: 1.5px solid var(--dark); padding: 8px 15px; border-radius: 5px; margin-right: 10px; font-size: 12px; font-weight: 800; background: transparent; cursor: pointer; white-space: nowrap; }
     .form-btn.active { background: var(--dark); color: #FFF; }
     
-    .card { background: #FFF; padding: 20px; border: 1px solid #DDD; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 15px; }
+    .card { background: #FFF; padding: 15px; border: 1px solid #DDD; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 15px; }
     .label { font-size: 10px; font-weight: 700; color: #888; letter-spacing: 1.5px; }
     .country-row { display: flex; align-items: center; margin-top: 5px; }
     .flag { border: 1px solid #EEE; border-radius: 3px; margin-right: 10px; object-fit: cover; }
-    .country-name { font-size: 24px; font-weight: 900; }
-    .year { font-size: 18px; font-weight: 800; color: var(--red); margin-top: 5px; }
+    .country-name { font-size: 20px; font-weight: 900; }
+    .year { font-size: 16px; font-weight: 800; color: var(--red); margin-top: 2px; }
     
-    .action-row { display: flex; justify-content: space-between; margin-bottom: 20px; }
+    .action-row { display: flex; justify-content: space-between; margin-bottom: 15px; }
     .btn { flex: 1; background: #EAE6DA; border: 1.5px solid var(--dark); padding: 12px; font-size: 12px; font-weight: 800; text-align: center; border-radius: 3px; cursor: pointer; }
     .btn:active { opacity: 0.7; }
     
-    .player-list { background: #FFF; border: 1px solid #DDD; height: 250px; overflow-y: auto; margin-bottom: 20px; }
-    .list-header { font-size: 10px; font-weight: 700; color: var(--gray); padding: 10px; background: #F9F8F5; border-bottom: 1px solid #DDD; position: sticky; top: 0; }
-    .player-row { display: flex; padding: 12px 10px; border-bottom: 1px solid #EEE; align-items: center; cursor: pointer; }
+    .player-list { background: #FFF; border: 1px solid #DDD; height: 220px; overflow-y: auto; margin-bottom: 20px; }
+    .list-header { font-size: 10px; font-weight: 700; color: var(--gray); padding: 10px; background: #F9F8F5; border-bottom: 1px solid #DDD; position: sticky; top: 0; z-index: 5; }
+    .player-row { display: flex; padding: 10px; border-bottom: 1px solid #EEE; align-items: center; cursor: pointer; }
     .player-row.disabled { opacity: 0.4; background: #F9F9F9; text-decoration: line-through; pointer-events: none; }
     .p-num { width: 30px; font-size: 12px; font-weight: 700; color: #888; }
-    .p-name { flex: 1; font-size: 14px; font-weight: 700; }
+    .p-name { flex: 1; font-size: 13px; font-weight: 700; }
     .p-pos { width: 40px; font-size: 10px; font-weight: 700; color: #888; text-align: right; margin-right: 10px; }
-    .p-ovr { width: 30px; font-size: 18px; font-weight: 900; text-align: right; }
+    .p-ovr { width: 30px; font-size: 16px; font-weight: 900; text-align: right; }
     
-    .box-score { margin-top: 20px; }
+    /* CAMPO DE FUTEBOL TÁTICO */
+    .pitch-container {
+      position: relative;
+      width: 100%;
+      height: 480px;
+      background-color: var(--pitch-green);
+      background-image: repeating-linear-gradient(0deg, #2e7d32, #2e7d32 40px, #266b2a 40px, #266b2a 80px);
+      border: 3px solid #FFF;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+    .pitch-line { position: absolute; border: 2px solid var(--pitch-line); pointer-events: none; }
+    .pitch-center-line { top: 50%; left: 0; width: 100%; height: 0; border-top: 2px solid var(--pitch-line); }
+    .pitch-center-circle { top: 50%; left: 50%; width: 90px; height: 90px; border-radius: 50%; transform: translate(-50%, -50%); }
+    .pitch-penalty-top { top: 0; left: 50%; width: 140px; height: 60px; transform: translateX(-50%); border-top: none; }
+    .pitch-penalty-bottom { bottom: 0; left: 50%; width: 140px; height: 60px; transform: translateX(-50%); border-bottom: none; }
+    
+    /* NODES/BOTÕES DOS JOGADORES NO CAMPO */
+    .pitch-slot {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+    }
+    .slot-badge {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #FFF;
+      border: 2px solid var(--dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 900;
+      color: var(--dark);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      transition: all 0.2s;
+    }
+    .pitch-slot.active-target .slot-badge {
+      border-color: #FFD700;
+      background: #FFD700;
+      animation: pulse 1s infinite alternate;
+    }
+    .pitch-slot.filled .slot-badge {
+      background: var(--dark);
+      color: #FFF;
+      border-color: #FFF;
+    }
+    .slot-label {
+      background: rgba(0, 0, 0, 0.75);
+      color: #FFF;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 5px;
+      border-radius: 3px;
+      margin-top: 3px;
+      white-space: nowrap;
+      max-width: 70px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: center;
+    }
+
+    @keyframes pulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.15); }
+    }
+
     .stats { display: flex; justify-content: space-between; margin-bottom: 20px; }
     .stat-line { height: 3px; width: 30px; margin-bottom: 5px; }
     .stat-label { font-size: 10px; font-weight: 800; }
     
-    .bs-list { background: #F9F8F5; padding: 15px; border-radius: 5px; }
-    .bs-row { display: flex; padding: 12px 0; border-bottom: 1px solid #E6E3DB; align-items: center; }
+    .sim-btn { background: var(--red); color: #FFF; padding: 18px; text-align: center; font-size: 16px; font-weight: 900; border-radius: 5px; margin-top: 10px; cursor: pointer; border: none; width: 100%; display: none; }
     
-    .sim-btn { background: var(--red); color: #FFF; padding: 18px; text-align: center; font-size: 16px; font-weight: 900; border-radius: 5px; margin-top: 30px; cursor: pointer; border: none; width: 100%; display: none; }
-    
-    /* MODAL DE SIMULAÇÃO */
     #live-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); padding: 20px; overflow-y: auto; z-index: 1000; }
     .live-widget { background: var(--dark); padding: 20px; border-radius: 10px; margin-bottom: 20px; color: #FFF; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
     .live-phase { color: #FFD700; font-size: 12px; font-weight: 800; text-align: center; letter-spacing: 2px; margin-bottom: 15px; text-transform: uppercase; }
@@ -85,7 +157,6 @@
   </div>
 
   <div id="main-view">
-    <!-- As opções de tática vão aparecer aqui dentro geradas pelo JavaScript -->
     <div class="formations" id="formations-container"></div>
     
     <div class="card" id="drawn-card">
@@ -102,27 +173,33 @@
     </div>
     
     <div class="player-list" id="player-list-container" style="display: none;">
-      <div class="list-header">ESCOLHA UM JOGADOR</div>
+      <div class="list-header" id="list-header-title">ESCOLHA UM JOGADOR</div>
       <div id="player-list"></div>
     </div>
 
-    <div class="box-score">
-      <div style="border-bottom: 1px solid #1A1A1A; padding-bottom: 10px; margin-bottom: 15px; font-size: 12px; font-weight: 800;">
-        BOX SCORE • <span id="pick-count">0</span>/11
+    <!-- CAMPO DE FUTEBOL INTERATIVO -->
+    <div style="border-bottom: 1px solid #1A1A1A; padding-bottom: 10px; margin-bottom: 15px; font-size: 12px; font-weight: 800;">
+      ESCALAÇÃO NO CAMPO • <span id="pick-count">0</span>/11
+    </div>
+
+    <div class="pitch-container" id="pitch">
+      <div class="pitch-line pitch-center-line"></div>
+      <div class="pitch-line pitch-center-circle"></div>
+      <div class="pitch-line pitch-penalty-top"></div>
+      <div class="pitch-line pitch-penalty-bottom"></div>
+      <!-- Slots dinâmicos dos jogadores -->
+      <div id="pitch-slots"></div>
+    </div>
+
+    <div class="stats">
+      <div style="width: 45%;">
+        <div class="stat-line" style="background: var(--red);"></div>
+        <div class="stat-label">ATAQUE <span id="atk-score">--</span></div>
       </div>
-      
-      <div class="stats">
-        <div style="width: 45%;">
-          <div class="stat-line" style="background: var(--red);"></div>
-          <div class="stat-label">ATAQUE <span id="atk-score">--</span></div>
-        </div>
-        <div style="width: 45%;">
-          <div class="stat-line" style="background: var(--dark);"></div>
-          <div class="stat-label">DEFESA <span id="def-score">--</span></div>
-        </div>
+      <div style="width: 45%;">
+        <div class="stat-line" style="background: var(--dark);"></div>
+        <div class="stat-label">DEFESA <span id="def-score">--</span></div>
       </div>
-      
-      <div class="bs-list" id="box-score-list"></div>
     </div>
     
     <button class="sim-btn" id="sim-btn" onclick="runTournament()">SIMULAR COPA 🏆</button>
@@ -143,18 +220,15 @@
     <div class="card">
       <div class="label" style="border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 10px;">PROJETO ACADÊMICO</div>
       <div style="font-size: 14px; color: var(--dark); line-height: 1.5; text-align: center;">
-        <b>Desenvolvido por Gabriel Nascimento Diógenes</b><br>
-        Sistemas para Internet | Instituto Federal do Acre (IFAC)<br>
-        <i>Disciplina: Dispositivos Móveis 2</i>
+        <b>Desenvolvido por Gabriel Nascimento Diógenes[cite: 1]</b><br>
+        Sistemas para Internet | Instituto Federal do Acre (IFAC)[cite: 1]<br>
+        <i>Disciplina: Dispositivos Móveis 2</i>[cite: 1]
       </div>
     </div>
     <div class="btn" style="background: var(--dark); color: white;" onclick="toggleAbout()">VOLTAR AO JOGO</div>
   </div>
 
   <script>
-    // ==========================================
-    // SISTEMA DE ÁUDIO E VIBRAÇÃO NATIVO (WEBVIEW)
-    // ==========================================
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx;
 
@@ -171,18 +245,12 @@
       osc.stop(audioCtx.currentTime + duration);
     }
 
-    // Função de Vibração (Android WebView Vibrate Permission requerida)
-    function vibrateDevice(pattern) {
-      if (navigator.vibrate) navigator.vibrate(pattern);
-    }
+    function vibrateDevice(pattern) { if (navigator.vibrate) navigator.vibrate(pattern); }
 
     function triggerClick() { initAudio(); playTone(600, 'sine', 0.1); vibrateDevice(30); }
     function triggerWhistle() { initAudio(); playTone(1200, 'sawtooth', 0.4); setTimeout(()=>playTone(1400, 'sawtooth', 0.6), 200); vibrateDevice([300, 100, 400]); }
     function triggerGoal() { initAudio(); playTone(400, 'square', 0.2); setTimeout(()=>playTone(800, 'square', 0.5), 100); vibrateDevice([100, 50, 100, 50, 300]); }
 
-    // ==========================================
-    // BANCO DE DADOS 
-    // ==========================================
     const DB_TEAMS = [
       { id: 8, country: 'Brasil', code: 'BR', year: 2002, players: [ { num: 1, name: 'Marcos', pos: 'GOL', ovr: 86 }, { num: 2, name: 'Cafu', pos: 'LD', ovr: 88 }, { num: 3, name: 'Lúcio', pos: 'ZAG', ovr: 85 }, { num: 6, name: 'Roberto Carlos', pos: 'LE', ovr: 89 }, { num: 11, name: 'Ronaldinho', pos: 'MEI', ovr: 91 }, { num: 9, name: 'Ronaldo', pos: 'CA', ovr: 94 } ] },
       { id: 2, country: 'Espanha', code: 'ES', year: 2010, players: [ { num: 1, name: 'Casillas', pos: 'GOL', ovr: 89 }, { num: 15, name: 'Ramos', pos: 'LD', ovr: 86 }, { num: 8, name: 'Xavi', pos: 'MEI', ovr: 90 }, { num: 6, name: 'Iniesta', pos: 'PE', ovr: 89 }, { num: 7, name: 'David Villa', pos: 'CA', ovr: 88 } ] },
@@ -191,24 +259,34 @@
       { id: 5, country: 'França', code: 'FR', year: 2018, players: [ { num: 1, name: 'Lloris', pos: 'GOL', ovr: 87 }, { num: 13, name: 'Kanté', pos: 'VOL', ovr: 89 }, { num: 6, name: 'Pogba', pos: 'MC', ovr: 88 }, { num: 10, name: 'Mbappé', pos: 'PD', ovr: 89 }, { num: 7, name: 'Griezmann', pos: 'MEI', ovr: 89 } ] }
     ];
 
-    // Aqui estão as novas formações que aparecerão na interface automaticamente
+    // COORDENADAS X, Y (%) DE CADA POSIÇÃO NO CAMPO
     const FORMATIONS = {
-      '4-3-3': [ { key: 'GOL', type: 'DEF' }, { key: 'LD', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'LE', type: 'DEF' }, { key: 'VOL', type: 'DEF' }, { key: 'MC', type: 'ATK' }, { key: 'MEI', type: 'ATK' }, { key: 'PD', type: 'ATK' }, { key: 'CA', type: 'ATK' }, { key: 'PE', type: 'ATK' } ],
-      '4-4-2': [ { key: 'GOL', type: 'DEF' }, { key: 'LD', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'LE', type: 'DEF' }, { key: 'VOL', type: 'DEF' }, { key: 'VOL', type: 'DEF' }, { key: 'MC', type: 'ATK' }, { key: 'MEI', type: 'ATK' }, { key: 'CA', type: 'ATK' }, { key: 'CA', type: 'ATK' } ],
-      '4-2-3-1': [ { key: 'GOL', type: 'DEF' }, { key: 'LD', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'LE', type: 'DEF' }, { key: 'VOL', type: 'DEF' }, { key: 'VOL', type: 'DEF' }, { key: 'MEI', type: 'ATK' }, { key: 'PD', type: 'ATK' }, { key: 'PE', type: 'ATK' }, { key: 'CA', type: 'ATK' } ],
-      '3-4-3': [ { key: 'GOL', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'VOL', type: 'DEF' }, { key: 'MC', type: 'ATK' }, { key: 'MEI', type: 'ATK' }, { key: 'MEI', type: 'ATK' }, { key: 'PD', type: 'ATK' }, { key: 'CA', type: 'ATK' }, { key: 'PE', type: 'ATK' } ],
-      '5-3-2': [ { key: 'GOL', type: 'DEF' }, { key: 'LD', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'LE', type: 'DEF' }, { key: 'VOL', type: 'DEF' }, { key: 'MC', type: 'ATK' }, { key: 'MEI', type: 'ATK' }, { key: 'CA', type: 'ATK' }, { key: 'CA', type: 'ATK' } ],
-      '3-5-2': [ { key: 'GOL', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'VOL', type: 'DEF' }, { key: 'VOL', type: 'DEF' }, { key: 'MC', type: 'ATK' }, { key: 'MEI', type: 'ATK' }, { key: 'MEI', type: 'ATK' }, { key: 'CA', type: 'ATK' }, { key: 'CA', type: 'ATK' } ]
+      '4-3-3': [
+        { key: 'GOL', type: 'DEF', x: 50, y: 88 },
+        { key: 'LD', type: 'DEF', x: 85, y: 72 }, { key: 'ZAG', type: 'DEF', x: 62, y: 74 }, { key: 'ZAG', type: 'DEF', x: 38, y: 74 }, { key: 'LE', type: 'DEF', x: 15, y: 72 },
+        { key: 'VOL', type: 'DEF', x: 50, y: 55 }, { key: 'MC', type: 'ATK', x: 30, y: 42 }, { key: 'MEI', type: 'ATK', x: 70, y: 42 },
+        { key: 'PE', type: 'ATK', x: 20, y: 20 }, { key: 'CA', type: 'ATK', x: 50, y: 15 }, { key: 'PD', type: 'ATK', x: 80, y: 20 }
+      ],
+      '4-4-2': [
+        { key: 'GOL', type: 'DEF', x: 50, y: 88 },
+        { key: 'LD', type: 'DEF', x: 85, y: 72 }, { key: 'ZAG', type: 'DEF', x: 62, y: 74 }, { key: 'ZAG', type: 'DEF', x: 38, y: 74 }, { key: 'LE', type: 'DEF', x: 15, y: 72 },
+        { key: 'VOL', type: 'DEF', x: 35, y: 52 }, { key: 'VOL', type: 'DEF', x: 65, y: 52 }, { key: 'MC', type: 'ATK', x: 20, y: 35 }, { key: 'MEI', type: 'ATK', x: 80, y: 35 },
+        { key: 'CA', type: 'ATK', x: 35, y: 18 }, { key: 'CA', type: 'ATK', x: 65, y: 18 }
+      ],
+      '3-4-3': [
+        { key: 'GOL', type: 'DEF', x: 50, y: 88 },
+        { key: 'ZAG', type: 'DEF', x: 75, y: 74 }, { key: 'ZAG', type: 'DEF', x: 50, y: 76 }, { key: 'ZAG', type: 'DEF', x: 25, y: 74 },
+        { key: 'VOL', type: 'DEF', x: 35, y: 52 }, { key: 'MC', type: 'ATK', x: 65, y: 52 }, { key: 'MEI', type: 'ATK', x: 15, y: 40 }, { key: 'MEI', type: 'ATK', x: 85, y: 40 },
+        { key: 'PE', type: 'ATK', x: 20, y: 20 }, { key: 'CA', type: 'ATK', x: 50, y: 15 }, { key: 'PD', type: 'ATK', x: 80, y: 20 }
+      ]
     };
 
     let currentForm = '4-3-3';
     let myTeam = Array(11).fill(null);
     let currentRoll = null;
     let rerolls = 3;
+    let selectedSlotIndex = null; // SLOT SELECIONADO NO CAMPO
 
-    // ==========================================
-    // LÓGICA DE INTERFACE
-    // ==========================================
     function renderFormations() {
       const fc = document.getElementById('formations-container');
       fc.innerHTML = Object.keys(FORMATIONS).map(f => 
@@ -222,7 +300,7 @@
       if(myTeam.some(p => p !== null)) {
         if(!confirm("Mudar de tática fará você perder o time atual. Continuar?")) return;
       }
-      currentForm = f; myTeam = Array(11).fill(null); currentRoll = null; rerolls = 3;
+      currentForm = f; myTeam = Array(11).fill(null); currentRoll = null; rerolls = 3; selectedSlotIndex = null;
       renderAll();
     }
 
@@ -234,22 +312,63 @@
       renderAll();
     }
 
+    // CLIQUE EM UM SLOT ESPECÍFICO DO CAMPO
+    function selectSlot(index) {
+      triggerClick();
+      selectedSlotIndex = index;
+      renderAll();
+    }
+
+    // CLIQUE NO JOGADOR DA LISTA
     function pickPlayer(idx) {
       const p = currentRoll.players[idx];
       const positions = FORMATIONS[currentForm];
-      if (myTeam.some(pl => pl && pl.name === p.name)) return;
       
-      const slot = positions.findIndex((pos, i) => pos.key === p.pos && myTeam[i] === null);
-      if(slot === -1) return;
+      if (myTeam.some(pl => pl && pl.name === p.name)) return;
+
+      let slotToFill = selectedSlotIndex;
+
+      // Se o usuário não clicou em um slot do campo, acha a primeira posição livre compatível
+      if (slotToFill === null || myTeam[slotToFill] !== null || positions[slotToFill].key !== p.pos) {
+        slotToFill = positions.findIndex((pos, i) => pos.key === p.pos && myTeam[i] === null);
+      }
+
+      if (slotToFill === -1) return;
 
       triggerClick();
-      myTeam[slot] = { ...p, code: currentRoll.code };
+      myTeam[slotToFill] = { ...p, code: currentRoll.code };
       currentRoll = null;
+      selectedSlotIndex = null;
       renderAll();
+    }
+
+    function renderPitch() {
+      const positions = FORMATIONS[currentForm];
+      const container = document.getElementById('pitch-slots');
+      
+      container.innerHTML = positions.map((pos, i) => {
+        const p = myTeam[i];
+        const isSelected = selectedSlotIndex === i;
+        const isFilled = p !== null;
+        
+        let badgeContent = isFilled ? p.ovr : pos.key;
+        let labelText = isFilled ? p.name : pos.key;
+        
+        return `
+          <div class="pitch-slot ${isFilled ? 'filled' : ''} ${isSelected ? 'active-target' : ''}" 
+               style="left: ${pos.x}%; top: ${pos.y}%;" 
+               onclick="selectSlot(${i})">
+            <div class="slot-badge">${badgeContent}</div>
+            <div class="slot-label">${labelText}</div>
+          </div>
+        `;
+      }).join('');
     }
 
     function renderAll() {
       renderFormations();
+      renderPitch();
+      
       document.getElementById('reroll-count').innerText = rerolls;
       document.getElementById('roll-btn').innerText = currentRoll ? '↺ OUTRA SELEÇÃO' : 'SORTEAR SELEÇÃO';
 
@@ -258,10 +377,26 @@
         dc.innerHTML = `<div class="label">SAIU</div><div class="country-row"><img class="flag" width="36" height="26" src="https://flagcdn.com/w80/${currentRoll.code.toLowerCase()}.png"><div class="country-name">[${currentRoll.code}] ${currentRoll.country}</div></div><div class="year">Copa ${currentRoll.year}</div>`;
         
         document.getElementById('player-list-container').style.display = 'block';
+        
+        // Atualiza título da lista se um slot estiver selecionado
+        if (selectedSlotIndex !== null) {
+          const targetPos = FORMATIONS[currentForm][selectedSlotIndex].key;
+          document.getElementById('list-header-title').innerText = `ESCOLHA UM JOGADOR PARA A POSIÇÃO: ${targetPos}`;
+        } else {
+          document.getElementById('list-header-title').innerText = 'ESCOLHA UM JOGADOR';
+        }
+
         document.getElementById('player-list').innerHTML = currentRoll.players.map((p, i) => {
-          const slot = FORMATIONS[currentForm].findIndex((pos, idx) => pos.key === p.pos && myTeam[idx] === null);
-          const disabled = (myTeam.some(pl => pl && pl.name === p.name) || slot === -1) ? 'disabled' : '';
-          return `<div class="player-row ${disabled}" onclick="${disabled ? '' : `pickPlayer(${i})`}"><div class="p-num">#${p.num}</div><div class="p-name">${p.name}</div><div class="p-pos">${p.pos}</div><div class="p-ovr">${p.ovr}</div></div>`;
+          const positions = FORMATIONS[currentForm];
+          let disabled = myTeam.some(pl => pl && pl.name === p.name);
+          
+          if (selectedSlotIndex !== null) {
+            disabled = disabled || positions[selectedSlotIndex].key !== p.pos;
+          } else {
+            disabled = disabled || !positions.some((pos, idx) => pos.key === p.pos && myTeam[idx] === null);
+          }
+
+          return `<div class="player-row ${disabled ? 'disabled' : ''}" onclick="${disabled ? '' : `pickPlayer(${i})`}"><div class="p-num">#${p.num}</div><div class="p-name">${p.name}</div><div class="p-pos">${p.pos}</div><div class="p-ovr">${p.ovr}</div></div>`;
         }).join('');
       } else {
         dc.innerHTML = `<div class="label">SAIU</div><div class="country-name" style="margin-top:5px; color:#888;">Nenhuma Seleção</div>`;
@@ -271,14 +406,12 @@
       let atkTotal = 0, atkCount = 0, defTotal = 0, defCount = 0;
       const positions = FORMATIONS[currentForm];
       
-      document.getElementById('box-score-list').innerHTML = positions.map((pos, i) => {
+      positions.forEach((pos, i) => {
         const p = myTeam[i];
         if(p) {
           if(pos.type === 'ATK') { atkTotal+=p.ovr; atkCount++; } else { defTotal+=p.ovr; defCount++; }
-          return `<div class="bs-row"><div class="p-pos" style="text-align:left;">${pos.key}</div><img class="flag" width="18" height="13" src="https://flagcdn.com/w40/${p.code.toLowerCase()}.png"><div class="p-name">[${p.code}] ${p.name}</div><div class="p-ovr">${p.ovr}</div></div>`;
         }
-        return `<div class="bs-row"><div class="p-pos" style="text-align:left;">${pos.key}</div><div class="p-name" style="color:#B0AFA9;">—</div></div>`;
-      }).join('');
+      });
 
       const picked = myTeam.filter(p => p).length;
       document.getElementById('pick-count').innerText = picked;
@@ -296,9 +429,6 @@
       else { ab.style.display = 'block'; mv.style.display = 'none'; }
     }
 
-    // ==========================================
-    // MOTOR DA COPA (SIMULADOR ASSÍNCRONO)
-    // ==========================================
     const sleep = ms => new Promise(r => setTimeout(r, ms));
 
     async function playLiveMatch(phase, opp) {
@@ -326,7 +456,7 @@
       let eventText = [];
 
       for(let t=0; t<=90; t+=3) {
-        await sleep(150); // Velocidade
+        await sleep(150);
         document.getElementById('live-time').innerText = t + "'";
         
         let gNow = events.filter(e => e.t >= t && e.t < t+3);
@@ -368,7 +498,7 @@
 
     function restartDraft() {
       triggerClick();
-      myTeam = Array(11).fill(null); currentRoll = null; rerolls = 3;
+      myTeam = Array(11).fill(null); currentRoll = null; rerolls = 3; selectedSlotIndex = null;
       document.getElementById('live-modal').style.display = 'none';
       document.getElementById('main-view').style.display = 'block';
       renderAll();
