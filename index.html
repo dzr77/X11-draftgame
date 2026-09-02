@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Draft X11 - Campo Interativo</title>
+  <title>Draft X11 - Mega Mundial Histórico</title>
   <style>
     :root {
       --bg: #F4F1EA;
@@ -39,10 +39,11 @@
     .player-list { background: #FFF; border: 1px solid #DDD; height: 220px; overflow-y: auto; margin-bottom: 20px; }
     .list-header { font-size: 10px; font-weight: 700; color: var(--gray); padding: 10px; background: #F9F8F5; border-bottom: 1px solid #DDD; position: sticky; top: 0; z-index: 5; }
     .player-row { display: flex; padding: 10px; border-bottom: 1px solid #EEE; align-items: center; cursor: pointer; }
+    .player-row.selected { background: #E2F0D9; border-left: 5px solid #2e7d32; }
     .player-row.disabled { opacity: 0.4; background: #F9F9F9; text-decoration: line-through; pointer-events: none; }
     .p-num { width: 30px; font-size: 12px; font-weight: 700; color: #888; }
     .p-name { flex: 1; font-size: 13px; font-weight: 700; }
-    .p-pos { width: 40px; font-size: 10px; font-weight: 700; color: #888; text-align: right; margin-right: 10px; }
+    .p-pos { width: 40px; font-size: 10px; font-weight: 700; color: var(--gray); text-align: right; margin-right: 10px; }
     .p-ovr { width: 30px; font-size: 16px; font-weight: 900; text-align: right; }
     
     /* CAMPO DE FUTEBOL TÁTICO */
@@ -64,7 +65,6 @@
     .pitch-penalty-top { top: 0; left: 50%; width: 140px; height: 60px; transform: translateX(-50%); border-top: none; }
     .pitch-penalty-bottom { bottom: 0; left: 50%; width: 140px; height: 60px; transform: translateX(-50%); border-bottom: none; }
     
-    /* NODES/BOTÕES DOS JOGADORES NO CAMPO */
     .pitch-slot {
       position: absolute;
       width: 60px;
@@ -74,7 +74,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
+      cursor: default;
       z-index: 10;
     }
     .slot-badge {
@@ -92,11 +92,14 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.3);
       transition: all 0.2s;
     }
-    .pitch-slot.active-target .slot-badge {
+    
+    .pitch-slot.compatible { cursor: pointer; }
+    .pitch-slot.compatible .slot-badge {
       border-color: #FFD700;
       background: #FFD700;
       animation: pulse 1s infinite alternate;
     }
+    
     .pitch-slot.filled .slot-badge {
       background: var(--dark);
       color: #FFF;
@@ -173,21 +176,20 @@
     </div>
     
     <div class="player-list" id="player-list-container" style="display: none;">
-      <div class="list-header" id="list-header-title">ESCOLHA UM JOGADOR</div>
+      <div class="list-header" id="list-header-title">1º PASSO: ESCOLHA UM JOGADOR ABAIXO</div>
       <div id="player-list"></div>
     </div>
 
-    <!-- CAMPO DE FUTEBOL INTERATIVO -->
-    <div style="border-bottom: 1px solid #1A1A1A; padding-bottom: 10px; margin-bottom: 15px; font-size: 12px; font-weight: 800;">
+    <div style="border-bottom: 1px solid #1A1A1A; padding-bottom: 10px; margin-bottom: 15px; font-size: 12px; font-weight: 800;" id="pitch-instruction">
       ESCALAÇÃO NO CAMPO • <span id="pick-count">0</span>/11
     </div>
 
+    <!-- MAPA DE CAMPO TÁTICO -->
     <div class="pitch-container" id="pitch">
       <div class="pitch-line pitch-center-line"></div>
       <div class="pitch-line pitch-center-circle"></div>
       <div class="pitch-line pitch-penalty-top"></div>
       <div class="pitch-line pitch-penalty-bottom"></div>
-      <!-- Slots dinâmicos dos jogadores -->
       <div id="pitch-slots"></div>
     </div>
 
@@ -220,7 +222,7 @@
     <div class="card">
       <div class="label" style="border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 10px;">PROJETO ACADÊMICO</div>
       <div style="font-size: 14px; color: var(--dark); line-height: 1.5; text-align: center;">
-        <b>Desenvolvido por Gabriel Nascimento Diógenes[cite: 1]</b><br>
+        <b>Desenvolvido por Gabriel Nascimento Diógenes</b>[cite: 1]<br>
         Sistemas para Internet | Instituto Federal do Acre (IFAC)[cite: 1]<br>
         <i>Disciplina: Dispositivos Móveis 2</i>[cite: 1]
       </div>
@@ -251,15 +253,153 @@
     function triggerWhistle() { initAudio(); playTone(1200, 'sawtooth', 0.4); setTimeout(()=>playTone(1400, 'sawtooth', 0.6), 200); vibrateDevice([300, 100, 400]); }
     function triggerGoal() { initAudio(); playTone(400, 'square', 0.2); setTimeout(()=>playTone(800, 'square', 0.5), 100); vibrateDevice([100, 50, 100, 50, 300]); }
 
+    // MEGA BANCO DE DADOS DE SELEÇÕES HISTÓRICAS E ATUAIS
     const DB_TEAMS = [
-      { id: 8, country: 'Brasil', code: 'BR', year: 2002, players: [ { num: 1, name: 'Marcos', pos: 'GOL', ovr: 86 }, { num: 2, name: 'Cafu', pos: 'LD', ovr: 88 }, { num: 3, name: 'Lúcio', pos: 'ZAG', ovr: 85 }, { num: 6, name: 'Roberto Carlos', pos: 'LE', ovr: 89 }, { num: 11, name: 'Ronaldinho', pos: 'MEI', ovr: 91 }, { num: 9, name: 'Ronaldo', pos: 'CA', ovr: 94 } ] },
-      { id: 2, country: 'Espanha', code: 'ES', year: 2010, players: [ { num: 1, name: 'Casillas', pos: 'GOL', ovr: 89 }, { num: 15, name: 'Ramos', pos: 'LD', ovr: 86 }, { num: 8, name: 'Xavi', pos: 'MEI', ovr: 90 }, { num: 6, name: 'Iniesta', pos: 'PE', ovr: 89 }, { num: 7, name: 'David Villa', pos: 'CA', ovr: 88 } ] },
-      { id: 4, country: 'Alemanha', code: 'DE', year: 2014, players: [ { num: 1, name: 'Neuer', pos: 'GOL', ovr: 90 }, { num: 16, name: 'Lahm', pos: 'LD', ovr: 88 }, { num: 18, name: 'Kroos', pos: 'MEI', ovr: 88 }, { num: 13, name: 'Müller', pos: 'PD', ovr: 88 }, { num: 11, name: 'Klose', pos: 'CA', ovr: 85 } ] },
-      { id: 6, country: 'Argentina', code: 'AR', year: 2022, players: [ { num: 23, name: 'E. Martínez', pos: 'GOL', ovr: 86 }, { num: 19, name: 'Otamendi', pos: 'ZAG', ovr: 83 }, { num: 10, name: 'Messi', pos: 'PD', ovr: 94 }, { num: 11, name: 'Di María', pos: 'PE', ovr: 87 }, { num: 9, name: 'J. Álvarez', pos: 'CA', ovr: 85 } ] },
-      { id: 5, country: 'França', code: 'FR', year: 2018, players: [ { num: 1, name: 'Lloris', pos: 'GOL', ovr: 87 }, { num: 13, name: 'Kanté', pos: 'VOL', ovr: 89 }, { num: 6, name: 'Pogba', pos: 'MC', ovr: 88 }, { num: 10, name: 'Mbappé', pos: 'PD', ovr: 89 }, { num: 7, name: 'Griezmann', pos: 'MEI', ovr: 89 } ] }
+      { 
+        id: 1, country: 'Brasil', code: 'BR', year: 2002, 
+        players: [ 
+          { num: 1, name: 'Marcos', pos: 'GOL', ovr: 86 }, { num: 2, name: 'Cafu', pos: 'LD', ovr: 88 }, 
+          { num: 3, name: 'Lúcio', pos: 'ZAG', ovr: 85 }, { num: 4, name: 'Roque Jr', pos: 'ZAG', ovr: 82 }, 
+          { num: 6, name: 'R. Carlos', pos: 'LE', ovr: 89 }, { num: 8, name: 'G. Silva', pos: 'VOL', ovr: 84 }, 
+          { num: 15, name: 'Kléberson', pos: 'MC', ovr: 82 }, { num: 11, name: 'Ronaldinho', pos: 'MEI', ovr: 91 }, 
+          { num: 17, name: 'Denílson', pos: 'PD', ovr: 83 }, { num: 10, name: 'Rivaldo', pos: 'PE', ovr: 90 }, 
+          { num: 9, name: 'Ronaldo', pos: 'CA', ovr: 94 } 
+        ] 
+      },
+      { 
+        id: 2, country: 'Brasil', code: 'BR', year: 2014, 
+        players: [ 
+          { num: 12, name: 'Júlio César', pos: 'GOL', ovr: 85 }, { num: 2, name: 'D. Alves', pos: 'LD', ovr: 86 }, 
+          { num: 3, name: 'T. Silva', pos: 'ZAG', ovr: 88 }, { num: 4, name: 'David Luiz', pos: 'ZAG', ovr: 84 }, 
+          { num: 6, name: 'Marcelo', pos: 'LE', ovr: 87 }, { num: 8, name: 'Paulinho', pos: 'VOL', ovr: 83 }, 
+          { num: 17, name: 'L. Gustavo', pos: 'MC', ovr: 84 }, { num: 11, name: 'Oscar', pos: 'MEI', ovr: 85 }, 
+          { num: 7, name: 'Hulk', pos: 'PD', ovr: 84 }, { num: 10, name: 'Neymar', pos: 'PE', ovr: 91 }, 
+          { num: 9, name: 'Fred', pos: 'CA', ovr: 81 } 
+        ] 
+      },
+      { 
+        id: 3, country: 'Espanha', code: 'ES', year: 2010, 
+        players: [ 
+          { num: 1, name: 'Casillas', pos: 'GOL', ovr: 89 }, { num: 15, name: 'Ramos', pos: 'LD', ovr: 86 }, 
+          { num: 3, name: 'Piqué', pos: 'ZAG', ovr: 85 }, { num: 5, name: 'Puyol', pos: 'ZAG', ovr: 88 }, 
+          { num: 11, name: 'Capdevila', pos: 'LE', ovr: 80 }, { num: 16, name: 'Busquets', pos: 'VOL', ovr: 85 }, 
+          { num: 14, name: 'X. Alonso', pos: 'MC', ovr: 86 }, { num: 8, name: 'Xavi', pos: 'MEI', ovr: 90 }, 
+          { num: 6, name: 'Iniesta', pos: 'PE', ovr: 89 }, { num: 7, name: 'D. Villa', pos: 'CA', ovr: 88 }, 
+          { num: 9, name: 'Torres', pos: 'PD', ovr: 85 } 
+        ] 
+      },
+      { 
+        id: 4, country: 'Alemanha', code: 'DE', year: 2014, 
+        players: [ 
+          { num: 1, name: 'Neuer', pos: 'GOL', ovr: 90 }, { num: 16, name: 'Lahm', pos: 'LD', ovr: 88 }, 
+          { num: 20, name: 'Boateng', pos: 'ZAG', ovr: 85 }, { num: 5, name: 'Hummels', pos: 'ZAG', ovr: 86 }, 
+          { num: 4, name: 'Höwedes', pos: 'LE', ovr: 80 }, { num: 7, name: 'Schweinsteiger', pos: 'VOL', ovr: 87 }, 
+          { num: 6, name: 'Khedira', pos: 'MC', ovr: 83 }, { num: 18, name: 'Kroos', pos: 'MEI', ovr: 88 }, 
+          { num: 13, name: 'Müller', pos: 'PD', ovr: 88 }, { num: 8, name: 'Özil', pos: 'PE', ovr: 86 }, 
+          { num: 11, name: 'Klose', pos: 'CA', ovr: 85 } 
+        ] 
+      },
+      { 
+        id: 5, country: 'Argentina', code: 'AR', year: 2022, 
+        players: [ 
+          { num: 23, name: 'E. Martínez', pos: 'GOL', ovr: 86 }, { num: 26, name: 'Molina', pos: 'LD', ovr: 82 }, 
+          { num: 13, name: 'Romero', pos: 'ZAG', ovr: 85 }, { num: 19, name: 'Otamendi', pos: 'ZAG', ovr: 83 }, 
+          { num: 3, name: 'Tagliafico', pos: 'LE', ovr: 81 }, { num: 7, name: 'De Paul', pos: 'VOL', ovr: 84 }, 
+          { num: 24, name: 'E. Fernández', pos: 'MC', ovr: 85 }, { num: 20, name: 'Mac Allister', pos: 'MEI', ovr: 84 }, 
+          { num: 10, name: 'Messi', pos: 'PD', ovr: 94 }, { num: 11, name: 'Di María', pos: 'PE', ovr: 87 }, 
+          { num: 9, name: 'J. Álvarez', pos: 'CA', ovr: 85 } 
+        ] 
+      },
+      { 
+        id: 6, country: 'França', code: 'FR', year: 2018, 
+        players: [ 
+          { num: 1, name: 'Lloris', pos: 'GOL', ovr: 87 }, { num: 2, name: 'Pavard', pos: 'LD', ovr: 83 }, 
+          { num: 4, name: 'Varane', pos: 'ZAG', ovr: 87 }, { num: 5, name: 'Umtiti', pos: 'ZAG', ovr: 85 }, 
+          { num: 21, name: 'L. Hernandez', pos: 'LE', ovr: 83 }, { num: 13, name: 'Kanté', pos: 'VOL', ovr: 89 }, 
+          { num: 6, name: 'Pogba', pos: 'MC', ovr: 88 }, { num: 7, name: 'Griezmann', pos: 'MEI', ovr: 89 }, 
+          { num: 10, name: 'Mbappé', pos: 'PD', ovr: 89 }, { num: 14, name: 'Matuidi', pos: 'PE', ovr: 84 }, 
+          { num: 9, name: 'Giroud', pos: 'CA', ovr: 83 } 
+        ] 
+      },
+      { 
+        id: 7, country: 'Inglaterra', code: 'GB-ENG', year: 2018, 
+        players: [ 
+          { num: 1, name: 'Pickford', pos: 'GOL', ovr: 83 }, { num: 2, name: 'Walker', pos: 'LD', ovr: 85 }, 
+          { num: 5, name: 'Stones', pos: 'ZAG', ovr: 84 }, { num: 6, name: 'Maguire', pos: 'ZAG', ovr: 82 }, 
+          { num: 12, name: 'Trippier', pos: 'LE', ovr: 83 }, { num: 8, name: 'Henderson', pos: 'VOL', ovr: 82 }, 
+          { num: 20, name: 'Alli', pos: 'MC', ovr: 83 }, { num: 7, name: 'Lingard', pos: 'MEI', ovr: 81 }, 
+          { num: 10, name: 'Sterling', pos: 'PD', ovr: 85 }, { num: 11, name: 'Rashford', pos: 'PE', ovr: 82 }, 
+          { num: 9, name: 'Kane', pos: 'CA', ovr: 89 } 
+        ] 
+      },
+      { 
+        id: 8, country: 'Bélgica', code: 'BE', year: 2018, 
+        players: [ 
+          { num: 1, name: 'Courtois', pos: 'GOL', ovr: 89 }, { num: 2, name: 'Alderweireld', pos: 'LD', ovr: 84 }, 
+          { num: 4, name: 'Kompany', pos: 'ZAG', ovr: 85 }, { num: 5, name: 'Vertonghen', pos: 'ZAG', ovr: 84 }, 
+          { num: 15, name: 'Meunier', pos: 'LE', ovr: 81 }, { num: 6, name: 'Witsel', pos: 'VOL', ovr: 82 }, 
+          { num: 7, name: 'De Bruyne', pos: 'MC', ovr: 91 }, { num: 8, name: 'Fellaini', pos: 'MEI', ovr: 80 }, 
+          { num: 14, name: 'Mertens', pos: 'PD', ovr: 85 }, { num: 10, name: 'E. Hazard', pos: 'PE', ovr: 90 }, 
+          { num: 9, name: 'R. Lukaku', pos: 'CA', ovr: 87 } 
+        ] 
+      },
+      { 
+        id: 9, country: 'Colômbia', code: 'CO', year: 2014, 
+        players: [ 
+          { num: 1, name: 'Ospina', pos: 'GOL', ovr: 81 }, { num: 18, name: 'Zúñiga', pos: 'LD', ovr: 80 }, 
+          { num: 2, name: 'C. Zapata', pos: 'ZAG', ovr: 79 }, { num: 3, name: 'Yepes', pos: 'ZAG', ovr: 78 }, 
+          { num: 7, name: 'Armero', pos: 'LE', ovr: 79 }, { num: 6, name: 'C. Sánchez', pos: 'VOL', ovr: 81 }, 
+          { num: 8, name: 'Aguilar', pos: 'MC', ovr: 79 }, { num: 10, name: 'J. Rodríguez', pos: 'MEI', ovr: 88 }, 
+          { num: 11, name: 'Cuadrado', pos: 'PD', ovr: 83 }, { num: 9, name: 'Gutiérrez', pos: 'PE', ovr: 80 }, 
+          { num: 21, name: 'J. Martínez', pos: 'CA', ovr: 82 } 
+        ] 
+      },
+      { 
+        id: 10, country: 'Estados Unidos', code: 'US', year: 2014, 
+        players: [ 
+          { num: 1, name: 'T. Howard', pos: 'GOL', ovr: 84 }, { num: 23, name: 'F. Johnson', pos: 'LD', ovr: 78 }, 
+          { num: 5, name: 'Besler', pos: 'ZAG', ovr: 76 }, { num: 3, name: 'Gonzalez', pos: 'ZAG', ovr: 77 }, 
+          { num: 7, name: 'Beasley', pos: 'LE', ovr: 76 }, { num: 4, name: 'M. Bradley', pos: 'VOL', ovr: 81 }, 
+          { num: 13, name: 'J. Jones', pos: 'MC', ovr: 79 }, { num: 8, name: 'Dempsey', pos: 'MEI', ovr: 82 }, 
+          { num: 19, name: 'Zusi', pos: 'PD', ovr: 76 }, { num: 20, name: 'Bedoya', pos: 'PE', ovr: 76 }, 
+          { num: 11, name: 'Altidore', pos: 'CA', ovr: 78 } 
+        ] 
+      },
+      { 
+        id: 11, country: 'Japão', code: 'JP', year: 2022, 
+        players: [ 
+          { num: 12, name: 'Gonda', pos: 'GOL', ovr: 77 }, { num: 19, name: 'H. Sakai', pos: 'LD', ovr: 78 }, 
+          { num: 16, name: 'Tomiyasu', pos: 'ZAG', ovr: 81 }, { num: 22, name: 'Yoshida', pos: 'ZAG', ovr: 78 }, 
+          { num: 5, name: 'Nagatomo', pos: 'LE', ovr: 76 }, { num: 6, name: 'Endo', pos: 'VOL', ovr: 83 }, 
+          { num: 13, name: 'Morita', pos: 'MC', ovr: 79 }, { num: 15, name: 'Kamada', pos: 'MEI', ovr: 81 }, 
+          { num: 14, name: 'J. Itunya', pos: 'PD', ovr: 80 }, { num: 10, name: 'Minamino', pos: 'PE', ovr: 79 }, 
+          { num: 25, name: 'Maeda', pos: 'CA', ovr: 77 } 
+        ] 
+      },
+      { 
+        id: 12, country: 'Chile', code: 'CL', year: 2010, 
+        players: [ 
+          { num: 1, name: 'C. Bravo', pos: 'GOL', ovr: 83 }, { num: 4, name: 'Isla', pos: 'LD', ovr: 82 }, 
+          { num: 18, name: 'G. Jara', pos: 'ZAG', ovr: 78 }, { num: 3, name: 'Ponce', pos: 'ZAG', ovr: 77 }, 
+          { num: 5, name: 'Contreras', pos: 'LE', ovr: 78 }, { num: 8, name: 'A. Vidal', pos: 'VOL', ovr: 84 }, 
+          { num: 6, name: 'Carmona', pos: 'MC', ovr: 79 }, { num: 14, name: 'M. Fernández', pos: 'MEI', ovr: 82 }, 
+          { num: 7, name: 'A. Sánchez', pos: 'PD', ovr: 85 }, { num: 11, name: 'M. González', pos: 'PE', ovr: 79 }, 
+          { num: 9, name: 'H. Suazo', pos: 'CA', ovr: 81 } 
+        ] 
+      },
+      { 
+        id: 13, country: 'Itália', code: 'IT', year: 2006, 
+        players: [ 
+          { num: 1, name: 'Buffon', pos: 'GOL', ovr: 91 }, { num: 19, name: 'Zambrotta', pos: 'LD', ovr: 88 }, 
+          { num: 5, name: 'Cannavaro', pos: 'ZAG', ovr: 90 }, { num: 23, name: 'Materazzi', pos: 'ZAG', ovr: 82 }, 
+          { num: 3, name: 'Grosso', pos: 'LE', ovr: 83 }, { num: 21, name: 'Pirlo', pos: 'VOL', ovr: 90 }, 
+          { num: 8, name: 'Gattuso', pos: 'MC', ovr: 86 }, { num: 10, name: 'Totti', pos: 'MEI', ovr: 89 }, 
+          { num: 16, name: 'Camoranesi', pos: 'PD', ovr: 84 }, { num: 11, name: 'Del Piero', pos: 'PE', ovr: 86 }, 
+          { num: 9, name: 'Toni', pos: 'CA', ovr: 85 } 
+        ] 
+      }
     ];
 
-    // COORDENADAS X, Y (%) DE CADA POSIÇÃO NO CAMPO
     const FORMATIONS = {
       '4-3-3': [
         { key: 'GOL', type: 'DEF', x: 50, y: 88 },
@@ -285,7 +425,7 @@
     let myTeam = Array(11).fill(null);
     let currentRoll = null;
     let rerolls = 3;
-    let selectedSlotIndex = null; // SLOT SELECIONADO NO CAMPO
+    let selectedPlayerObj = null;
 
     function renderFormations() {
       const fc = document.getElementById('formations-container');
@@ -300,7 +440,7 @@
       if(myTeam.some(p => p !== null)) {
         if(!confirm("Mudar de tática fará você perder o time atual. Continuar?")) return;
       }
-      currentForm = f; myTeam = Array(11).fill(null); currentRoll = null; rerolls = 3; selectedSlotIndex = null;
+      currentForm = f; myTeam = Array(11).fill(null); currentRoll = null; rerolls = 3; selectedPlayerObj = null;
       renderAll();
     }
 
@@ -309,37 +449,30 @@
       if(currentRoll && rerolls <= 0) { alert("Sem re-sorteios!"); return; }
       if(currentRoll) rerolls--;
       currentRoll = DB_TEAMS[Math.floor(Math.random() * DB_TEAMS.length)];
+      selectedPlayerObj = null;
       renderAll();
     }
 
-    // CLIQUE EM UM SLOT ESPECÍFICO DO CAMPO
-    function selectSlot(index) {
-      triggerClick();
-      selectedSlotIndex = index;
-      renderAll();
-    }
-
-    // CLIQUE NO JOGADOR DA LISTA
-    function pickPlayer(idx) {
-      const p = currentRoll.players[idx];
-      const positions = FORMATIONS[currentForm];
-      
+    function selectPlayerFromList(playerIndex) {
+      const p = currentRoll.players[playerIndex];
       if (myTeam.some(pl => pl && pl.name === p.name)) return;
 
-      let slotToFill = selectedSlotIndex;
-
-      // Se o usuário não clicou em um slot do campo, acha a primeira posição livre compatível
-      if (slotToFill === null || myTeam[slotToFill] !== null || positions[slotToFill].key !== p.pos) {
-        slotToFill = positions.findIndex((pos, i) => pos.key === p.pos && myTeam[i] === null);
-      }
-
-      if (slotToFill === -1) return;
-
       triggerClick();
-      myTeam[slotToFill] = { ...p, code: currentRoll.code };
-      currentRoll = null;
-      selectedSlotIndex = null;
+      selectedPlayerObj = p;
       renderAll();
+    }
+
+    function placePlayerOnSlot(slotIndex) {
+      if (!selectedPlayerObj) return;
+      const positions = FORMATIONS[currentForm];
+
+      if (positions[slotIndex].key === selectedPlayerObj.pos && myTeam[slotIndex] === null) {
+        triggerClick();
+        myTeam[slotIndex] = { ...selectedPlayerObj, code: currentRoll.code };
+        currentRoll = null;
+        selectedPlayerObj = null;
+        renderAll();
+      }
     }
 
     function renderPitch() {
@@ -348,16 +481,16 @@
       
       container.innerHTML = positions.map((pos, i) => {
         const p = myTeam[i];
-        const isSelected = selectedSlotIndex === i;
         const isFilled = p !== null;
+        const isCompatible = selectedPlayerObj !== null && !isFilled && pos.key === selectedPlayerObj.pos;
         
         let badgeContent = isFilled ? p.ovr : pos.key;
         let labelText = isFilled ? p.name : pos.key;
         
         return `
-          <div class="pitch-slot ${isFilled ? 'filled' : ''} ${isSelected ? 'active-target' : ''}" 
+          <div class="pitch-slot ${isFilled ? 'filled' : ''} ${isCompatible ? 'compatible' : ''}" 
                style="left: ${pos.x}%; top: ${pos.y}%;" 
-               onclick="selectSlot(${i})">
+               onclick="${isCompatible ? `placePlayerOnSlot(${i})` : ''}">
             <div class="slot-badge">${badgeContent}</div>
             <div class="slot-label">${labelText}</div>
           </div>
@@ -374,29 +507,24 @@
 
       const dc = document.getElementById('drawn-card');
       if(currentRoll) {
-        dc.innerHTML = `<div class="label">SAIU</div><div class="country-row"><img class="flag" width="36" height="26" src="https://flagcdn.com/w80/${currentRoll.code.toLowerCase()}.png"><div class="country-name">[${currentRoll.code}] ${currentRoll.country}</div></div><div class="year">Copa ${currentRoll.year}</div>`;
+        dc.innerHTML = `<div class="label">SAIU</div><div class="country-row"><img class="flag" width="36" height="26" src="https://flagcdn.com/w80/${currentRoll.code.toLowerCase()}.png"><div class="country-name">[${currentRoll.code}] ${currentRoll.country} (${currentRoll.year})</div></div><div class="year">Elenco Copa ${currentRoll.year}</div>`;
         
         document.getElementById('player-list-container').style.display = 'block';
         
-        // Atualiza título da lista se um slot estiver selecionado
-        if (selectedSlotIndex !== null) {
-          const targetPos = FORMATIONS[currentForm][selectedSlotIndex].key;
-          document.getElementById('list-header-title').innerText = `ESCOLHA UM JOGADOR PARA A POSIÇÃO: ${targetPos}`;
+        if (selectedPlayerObj !== null) {
+          document.getElementById('list-header-title').innerText = `JOGADOR: ${selectedPlayerObj.name} (${selectedPlayerObj.pos}) - CLIQUE NO CAMPO!`;
         } else {
-          document.getElementById('list-header-title').innerText = 'ESCOLHA UM JOGADOR';
+          document.getElementById('list-header-title').innerText = '1º PASSO: ESCOLHA UM JOGADOR ABAIXO';
         }
 
         document.getElementById('player-list').innerHTML = currentRoll.players.map((p, i) => {
           const positions = FORMATIONS[currentForm];
-          let disabled = myTeam.some(pl => pl && pl.name === p.name);
-          
-          if (selectedSlotIndex !== null) {
-            disabled = disabled || positions[selectedSlotIndex].key !== p.pos;
-          } else {
-            disabled = disabled || !positions.some((pos, idx) => pos.key === p.pos && myTeam[idx] === null);
-          }
+          const isAlreadyPicked = myTeam.some(pl => pl && pl.name === p.name);
+          const hasEmptySlotForPos = positions.some((pos, idx) => pos.key === p.pos && myTeam[idx] === null);
+          const disabled = isAlreadyPicked || !hasEmptySlotForPos;
+          const isSelected = selectedPlayerObj && selectedPlayerObj.name === p.name;
 
-          return `<div class="player-row ${disabled ? 'disabled' : ''}" onclick="${disabled ? '' : `pickPlayer(${i})`}"><div class="p-num">#${p.num}</div><div class="p-name">${p.name}</div><div class="p-pos">${p.pos}</div><div class="p-ovr">${p.ovr}</div></div>`;
+          return `<div class="player-row ${disabled ? 'disabled' : ''} ${isSelected ? 'selected' : ''}" onclick="${disabled ? '' : `selectPlayerFromList(${i})`}"><div class="p-num">#${p.num}</div><div class="p-name">${p.name}</div><div class="p-pos">${p.pos}</div><div class="p-ovr">${p.ovr}</div></div>`;
         }).join('');
       } else {
         dc.innerHTML = `<div class="label">SAIU</div><div class="country-name" style="margin-top:5px; color:#888;">Nenhuma Seleção</div>`;
@@ -439,7 +567,7 @@
           <div class="live-board">
             <div class="team-col"><div class="live-team-name">Seu Time</div><div class="live-score" id="my-score">0</div></div>
             <div class="live-time" id="live-time">0'</div>
-            <div class="team-col"><div class="live-team-name"><img class="flag" width="18" height="13" src="https://flagcdn.com/w40/${opp.code.toLowerCase()}.png"> ${opp.country}</div><div class="live-score" id="opp-score">0</div></div>
+            <div class="team-col"><div class="live-team-name"><img class="flag" width="18" height="13" src="https://flagcdn.com/w40/${opp.code.toLowerCase()}.png"> ${opp.country} (${opp.year})</div><div class="live-score" id="opp-score">0</div></div>
           </div>
           <div class="live-events" id="live-events"></div>
         </div>`;
@@ -489,7 +617,7 @@
         if(res.w === 'me') pts+=3; else if(res.w === 'draw') pts+=1;
         
         let cls = res.w === 'me' ? 'win' : (res.w==='opp' ? 'loss' : 'draw');
-        document.getElementById('logs-container').innerHTML += `<div class="log-box ${cls}"><div class="label">JOGO ${i}</div><div>Seu Time ${res.m} x ${res.o} ${opp.country}</div></div>`;
+        document.getElementById('logs-container').innerHTML += `<div class="log-box ${cls}"><div class="label">JOGO ${i}</div><div>Seu Time ${res.m} x ${res.o} ${opp.country} (${opp.year})</div></div>`;
       }
       
       if(pts >= 4) document.getElementById('final-status').innerText = '🏆 CLASSIFICADO! 🏆';
@@ -498,7 +626,7 @@
 
     function restartDraft() {
       triggerClick();
-      myTeam = Array(11).fill(null); currentRoll = null; rerolls = 3; selectedSlotIndex = null;
+      myTeam = Array(11).fill(null); currentRoll = null; rerolls = 3; selectedPlayerObj = null;
       document.getElementById('live-modal').style.display = 'none';
       document.getElementById('main-view').style.display = 'block';
       renderAll();
