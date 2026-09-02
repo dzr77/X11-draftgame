@@ -77,7 +77,7 @@
 <body>
 
   <div class="header">
-    <div class="logo">7-0</div>
+    <div class="logo">X11</div>
     <div style="display: flex; align-items: center;">
       <div class="tactic-text" id="tactic-display">4-3-3</div>
       <div class="info-btn" onclick="toggleAbout()">ℹ️</div>
@@ -85,6 +85,7 @@
   </div>
 
   <div id="main-view">
+    <!-- As opções de tática vão aparecer aqui dentro geradas pelo JavaScript -->
     <div class="formations" id="formations-container"></div>
     
     <div class="card" id="drawn-card">
@@ -190,9 +191,14 @@
       { id: 5, country: 'França', code: 'FR', year: 2018, players: [ { num: 1, name: 'Lloris', pos: 'GOL', ovr: 87 }, { num: 13, name: 'Kanté', pos: 'VOL', ovr: 89 }, { num: 6, name: 'Pogba', pos: 'MC', ovr: 88 }, { num: 10, name: 'Mbappé', pos: 'PD', ovr: 89 }, { num: 7, name: 'Griezmann', pos: 'MEI', ovr: 89 } ] }
     ];
 
+    // Aqui estão as novas formações que aparecerão na interface automaticamente
     const FORMATIONS = {
       '4-3-3': [ { key: 'GOL', type: 'DEF' }, { key: 'LD', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'LE', type: 'DEF' }, { key: 'VOL', type: 'DEF' }, { key: 'MC', type: 'ATK' }, { key: 'MEI', type: 'ATK' }, { key: 'PD', type: 'ATK' }, { key: 'CA', type: 'ATK' }, { key: 'PE', type: 'ATK' } ],
-      '4-4-2': [ { key: 'GOL', type: 'DEF' }, { key: 'LD', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'LE', type: 'DEF' }, { key: 'VOL', type: 'DEF' }, { key: 'VOL', type: 'DEF' }, { key: 'MC', type: 'ATK' }, { key: 'MEI', type: 'ATK' }, { key: 'CA', type: 'ATK' }, { key: 'CA', type: 'ATK' } ]
+      '4-4-2': [ { key: 'GOL', type: 'DEF' }, { key: 'LD', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'LE', type: 'DEF' }, { key: 'VOL', type: 'DEF' }, { key: 'VOL', type: 'DEF' }, { key: 'MC', type: 'ATK' }, { key: 'MEI', type: 'ATK' }, { key: 'CA', type: 'ATK' }, { key: 'CA', type: 'ATK' } ],
+      '4-2-3-1': [ { key: 'GOL', type: 'DEF' }, { key: 'LD', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'LE', type: 'DEF' }, { key: 'VOL', type: 'DEF' }, { key: 'VOL', type: 'DEF' }, { key: 'MEI', type: 'ATK' }, { key: 'PD', type: 'ATK' }, { key: 'PE', type: 'ATK' }, { key: 'CA', type: 'ATK' } ],
+      '3-4-3': [ { key: 'GOL', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'VOL', type: 'DEF' }, { key: 'MC', type: 'ATK' }, { key: 'MEI', type: 'ATK' }, { key: 'MEI', type: 'ATK' }, { key: 'PD', type: 'ATK' }, { key: 'CA', type: 'ATK' }, { key: 'PE', type: 'ATK' } ],
+      '5-3-2': [ { key: 'GOL', type: 'DEF' }, { key: 'LD', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'LE', type: 'DEF' }, { key: 'VOL', type: 'DEF' }, { key: 'MC', type: 'ATK' }, { key: 'MEI', type: 'ATK' }, { key: 'CA', type: 'ATK' }, { key: 'CA', type: 'ATK' } ],
+      '3-5-2': [ { key: 'GOL', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'ZAG', type: 'DEF' }, { key: 'VOL', type: 'DEF' }, { key: 'VOL', type: 'DEF' }, { key: 'MC', type: 'ATK' }, { key: 'MEI', type: 'ATK' }, { key: 'MEI', type: 'ATK' }, { key: 'CA', type: 'ATK' }, { key: 'CA', type: 'ATK' } ]
     };
 
     let currentForm = '4-3-3';
