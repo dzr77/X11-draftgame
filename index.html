@@ -242,9 +242,9 @@
     <div class="card">
       <div class="label" style="border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 10px;">PROJETO ACADÊMICO</div>
       <div style="font-size: 14px; color: var(--dark); line-height: 1.5; text-align: center;">
-        <b>Desenvolvido por Gabriel Nascimento Diógenes</b><br>
-        Sistemas para Internet | Instituto Federal do Acre (IFAC)<br>
-        <i>Disciplina: Dispositivos Móveis 2</i>
+        <b>Desenvolvido por Gabriel Nascimento Diógenes</b>[cite: 1]<br>
+        Sistemas para Internet | Instituto Federal do Acre (IFAC)[cite: 1]<br>
+        <i>Disciplina: Dispositivos Móveis 2</i>[cite: 1]
       </div>
     </div>
     <div class="btn" style="background: var(--dark); color: white;" onclick="toggleAbout()">VOLTAR AO JOGO</div>
@@ -429,9 +429,9 @@
       else { ab.style.display = 'block'; mv.style.display = 'none'; }
     }
 
+    // SIMULADOR MAIS LENTO E LIMPO (APENAS MINUTO E NOME DO JOGADOR)
     const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-    // SIMULADOR DE PARTIDA AVANÇADO (COM GOLS NOMEADOS, PRORROGAÇÃO E PÊNALTIS)
     async function playMatch(phaseName, opp) {
       triggerWhistle();
       document.getElementById('live-widget-container').innerHTML = `
@@ -442,85 +442,80 @@
             <div class="live-time" id="live-time">0'</div>
             <div class="team-col"><div class="live-team-name"><img class="flag" width="18" height="13" src="https://flagcdn.com/w40/${opp.code.toLowerCase()}.png"> ${opp.country}</div><div class="live-score" id="opp-score">0</div></div>
           </div>
-          <div class="live-events" id="live-events">Aguardando apito inicial...</div>
+          <div class="live-events" id="live-events">Apito inicial... A partida começou!</div>
         </div>`;
 
-      // Sorteio de gols baseado nas forças dos elencos
       let myGoalsCount = Math.floor(Math.random() * 3);
       let oppGoalsCount = Math.floor(Math.random() * 3);
 
       let events = [];
       for(let i=0; i<myGoalsCount; i++) {
         let scorer = myTeam[Math.floor(Math.random() * myTeam.length)];
-        events.push({ t: Math.floor(Math.random()*85)+1, team: 'me', text: `⚽ GOL SEU! ${scorer.name} (${scorer.pos})` });
+        events.push({ t: Math.floor(Math.random()*85)+1, team: 'me', text: `${scorer.name}` });
       }
       for(let i=0; i<oppGoalsCount; i++) {
         let oppScorer = opp.players[Math.floor(Math.random() * opp.players.length)];
-        events.push({ t: Math.floor(Math.random()*85)+1, team: 'opp', text: `⚽ GOL DELES! ${oppScorer.name} (${oppScorer.country})` });
+        events.push({ t: Math.floor(Math.random()*85)+1, team: 'opp', text: `${oppScorer.name}` });
       }
       events.sort((a,b) => a.t - b.t);
 
       let cm = 0, co = 0;
       let eventText = [];
 
-      // 90 Minutos de Jogo
+      // Relógio andando mais lento (250ms por bloco de tempo)
       for(let t=0; t<=90; t+=5) {
-        await sleep(100);
+        await sleep(250); 
         document.getElementById('live-time').innerText = t + "'";
         let gNow = events.filter(e => e.t >= t && e.t < t+5);
         for(let g of gNow) {
           triggerGoal();
-          if(g.team === 'me') cm++; else co++;
-          eventText.unshift(`${g.t}' - ${g.text}`);
+          if(g.team === 'me') { cm++; eventText.unshift(`${g.t}' - ${g.text}`); }
+          else { co++; eventText.unshift(`${g.t}' - ${g.text} (${opp.country})`); }
         }
         document.getElementById('my-score').innerText = cm;
         document.getElementById('opp-score').innerText = co;
-        document.getElementById('live-events').innerHTML = eventText.join('<br>');
+        document.getElementById('live-events').innerHTML = eventText.join('<br>') || "Nenhum lance perigoso por enquanto...";
       }
 
       triggerWhistle();
-      await sleep(1000);
+      await sleep(1500);
 
-      // VERIFICAÇÃO DE EMPATE NO MATA-MATA (EXCETO FASE DE GRUPOS)
       let isKnockout = phaseName.includes('Oitavas') || phaseName.includes('Quartas') || phaseName.includes('Semifinal') || phaseName.includes('FINAL');
       
       if (isKnockout && cm === co) {
-        document.getElementById('live-events').innerHTML = "<b>EMPATE! Indo para a Prorrogação (120')...</b>";
-        await sleep(1500);
+        document.getElementById('live-events').innerHTML = "<b>Empate! Vamos para a Prorrogação (120')...</b>";
+        await sleep(2000);
 
-        // Prorrogação (+30 min)
         for(let t=95; t<=120; t+=5) {
-          await sleep(80);
+          await sleep(200);
           document.getElementById('live-time').innerText = t + "'";
-          if(Math.random() < 0.15) {
+          if(Math.random() < 0.12) {
             triggerGoal();
             let extraScorer = myTeam[Math.floor(Math.random() * myTeam.length)];
             cm++;
-            eventText.unshift(`${t}' - ⚡ GOL NA PRORROGAÇÃO! ${extraScorer.name}`);
+            eventText.unshift(`${t}' - ${extraScorer.name} (Prorrogação)`);
             document.getElementById('my-score').innerText = cm;
-          } else if(Math.random() < 0.15) {
+          } else if(Math.random() < 0.12) {
             triggerGoal();
             let oppExtra = opp.players[Math.floor(Math.random() * opp.players.length)];
             co++;
-            eventText.unshift(`${t}' - ⚡ GOL DELES NA PRORROGAÇÃO! ${oppExtra.name}`);
+            eventText.unshift(`${t}' - ${oppExtra.name} (${opp.country})`);
             document.getElementById('opp-score').innerText = co;
           }
           document.getElementById('live-events').innerHTML = eventText.join('<br>');
         }
 
-        // Se ainda persistir o empate, DISPUTA DE PÊNALTIS!
         if (cm === co) {
-          document.getElementById('live-events').innerHTML = "<b>FIM DA PRORROGAÇÃO! Disputa de Pênaltis 🥅</b>";
-          await sleep(1500);
+          document.getElementById('live-events').innerHTML = "<b>Fim da Prorrogação! Disputa de Pênaltis 🥅</b>";
+          await sleep(2000);
           let penMy = 0, penOpp = 0;
           for(let p=1; p<=5; p++) {
             if(Math.random() > 0.3) penMy++;
             if(Math.random() > 0.35) penOpp++;
             document.getElementById('live-time').innerText = `P${p}`;
-            document.getElementById('live-events').innerHTML = `Cobranças de Pênaltis: Seu Time [${penMy}] x [${penOpp}] ${opp.country}`;
-            await sleep(400);
+            document.getElementById('live-events').innerHTML = `Cobranças: Seu Time [${penMy}] x [${penOpp}] ${opp.country}`;
+            await sleep(600);
           }
-          // Garante desempate nos pênaltis se der igual
           if(penMy === penOpp) penMy++;
           cm = penMy > penOpp ? cm + 1 : cm;
           co = penOpp > penMy ? co + 1 : co;
@@ -533,7 +528,6 @@
       return { m: cm, o: co, winner: cm > co ? 'me' : 'opp' };
     }
 
-    // SIMULADOR DO TORNEIO INTEIRO (FASE DE GRUPOS ATÉ A FINAL)
     async function runTournament() {
       triggerClick();
       document.getElementById('main-view').style.display = 'none';
@@ -544,7 +538,6 @@
 
       let points = 0;
 
-      // 1. FASE DE GRUPOS (3 JOGOS)
       for(let i=1; i<=3; i++) {
         let opp = DB_TEAMS[Math.floor(Math.random()*DB_TEAMS.length)];
         let res = await playMatch(`Fase de Grupos - Jogo ${i}/3`, opp);
@@ -561,7 +554,6 @@
           </div>`;
       }
 
-      // Critério de Classificação: 4 pontos ou mais avança
       if(points < 4) {
         document.getElementById('final-status').innerHTML = `
           <div style="font-size: 18px; font-weight: 900; color: var(--red);">❌ ELIMINADO NA FASE DE GRUPOS (Total: ${points} pts) ❌</div>
@@ -569,7 +561,6 @@
         return;
       }
 
-      // 2. QUARTAS DE FINAL
       document.getElementById('modal-main-title').innerText = "COPA DO MUNDO • QUARTAS DE FINAL";
       let oppQuartas = DB_TEAMS[Math.floor(Math.random()*DB_TEAMS.length)];
       let resQ = await playMatch("Quartas de Final", oppQuartas);
@@ -587,7 +578,6 @@
         return;
       }
 
-      // 3. SEMIFINAL
       document.getElementById('modal-main-title').innerText = "COPA DO MUNDO • SEMIFINAL";
       let oppSemi = DB_TEAMS[Math.floor(Math.random()*DB_TEAMS.length)];
       let resS = await playMatch("Semifinal da Copa", oppSemi);
@@ -605,7 +595,6 @@
         return;
       }
 
-      // 4. GRANDE FINAL DA COPA DO MUNDO
       document.getElementById('modal-main-title').innerText = "🏆 GRANDE FINAL DA COPA DO MUNDO 🏆";
       let oppFinal = DB_TEAMS[Math.floor(Math.random()*DB_TEAMS.length)];
       let resF = await playMatch("FINAL DA COPA", oppFinal);
@@ -616,7 +605,6 @@
           <div>Seu Time ${resF.m} x ${resF.o} ${oppFinal.country}</div>
         </div>`;
 
-      // ANIMAÇÃO DIFERENCIADA CASO SEJA CAMPEÃO DA COPA DO MUNDO!
       if(resF.winner === 'me') {
         triggerWhistle();
         document.getElementById('live-widget-container').innerHTML = '';
